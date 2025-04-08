@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined Footing Design</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        input, button {
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Combined Footing Design Calculator</h1>
+
+    <label>Column Load P1 (kN):</label>
+    <input type="number" id="p1" value="150">
+
+    <label>Column Load P2 (kN):</label>
+    <input type="number" id="p2" value="350">
+
+    <label>Column Spacing (m):</label>
+    <input type="number" id="spacing" value="3.5">
+
+    <label>Safe Bearing Capacity (SBC) (kN/m²):</label>
+    <input type="number" id="sbc" value="150">
+
+    <button onclick="calculateFooting()">Calculate</button>
+
+    <div class="result" id="output"></div>
+
+    <script>
+        function calculateFooting() {
+            let P1 = parseFloat(document.getElementById('p1').value);
+            let P2 = parseFloat(document.getElementById('p2').value);
+            let spacing = parseFloat(document.getElementById('spacing').value);
+            let SBC = parseFloat(document.getElementById('sbc').value);
+
+            let totalLoad = P1 + P2;
+            let swLoad = 0.1 * totalLoad;
+            let netLoad = totalLoad + swLoad;
+
+            let areaReq = netLoad / SBC;
+            let lengthFooting = spacing + 1.0;
+            let widthFooting = areaReq / lengthFooting;
+
+            let soilPressure = netLoad / (lengthFooting * widthFooting);
+
+            let M = (P2 * (spacing / 2)) * (spacing / 2) / lengthFooting;
+
+            let fck = 25;
+            let fy = 500;
+
+            let d = Math.sqrt((M * 1e6) / (0.138 * fck * 1000));
+            d = d / 1000;
+            let effectiveDepth = d + 0.05;
+
+            let adoptedDepth = (effectiveDepth + 0.05).toFixed(2);
+
+            let Ast = (M * 1e6) / (0.87 * fy * 0.9 * d * 1000);
+            let barDia = 16;
+            let areaBar = (Math.PI * barDia ** 2) / 4;
+            let spacingProvided = (1000 * areaBar) / Ast;
+
+            document.getElementById('output').innerHTML = `
+                <strong>Length of Footing:</strong> ${lengthFooting.toFixed(2)} m <br>
+                <strong>Width of Footing:</strong> ${widthFooting.toFixed(2)} m <br>
+                <strong>Soil Pressure:</strong> ${soilPressure.toFixed(2)} kN/m² <br>
+                <strong>Maximum Bending Moment:</strong> ${M.toFixed(2)} kNm <br>
+                <strong>Adopted Overall Depth:</strong> ${adoptedDepth} m <br>
+                <strong>Steel Area Required Ast:</strong> ${Ast.toFixed(2)} mm²/m <br>
+                <strong>Provide:</strong> ${barDia} mm dia bars @ ${spacingProvided.toFixed(0)} mm c/c
+            `;
+        }
+    </script>
+
+</body>
+
+</html>
